@@ -152,7 +152,19 @@ void *execute_command(void *command_arg){
 }
 
 void log_event(const char *message){
-    printf(message);
+    pthread_mutex_lock(&log_mutex);
+
+    FILE *log_file = fopen("output.txt", "a"); // append mode to not erase previous data
+
+    if(log_file != NULL){
+        long long timestamp = current_timestamp();
+    }
+    else{
+        // error handling in case the file doesn't exist
+        fprintf(stdout, "ERROR: output.txt not found");
+    }
+
+    pthread_mutex_unlock(&log_mutex);
 }
 
 int main(){
