@@ -10,6 +10,7 @@ extern rwlock_t rwlock;
 
 hashRecord *hash_table_head = NULL;
 
+// provided timestamp function
 long long current_timestamp(){
     struct timeval te;
     gettimeofday(&te, NULL); // get current time
@@ -17,6 +18,7 @@ long long current_timestamp(){
     return microseconds;
 }
 
+// provided hash function
 uint32_t jenkins_hash(const char *key){
     size_t length = strlen(key);
     size_t i = 0;
@@ -36,13 +38,9 @@ uint32_t jenkins_hash(const char *key){
     return hash;
 }
 
-void insert(const char *name, uint32_t salary, int priority){
+void insert(const char *name, uint32_t salary){
 
-    rwlock_acquire_writelock(&rwlock);
-
-    log_event("WRITE LOCK ACQUIRED", priority);
-
-    hashRecord *temp = search(name, priority);
+    hashRecord *temp = search(name);
     
     if(temp == NULL){
         // insert at the head
@@ -56,29 +54,19 @@ void insert(const char *name, uint32_t salary, int priority){
 
         hash_table_head = newRecord;
 
-        printf("INSERT: Inserted %s, %u\n", name, salary);
+        // used for debugging
+        fprintf(stdout, "INSERT: Inserted %s, %u\n", name, salary);
 
     }
     else{
-        // already exists, update
-        uint32_t previousSalary = temp->salary;
-        temp->salary = salary;
-
-        printf("UPDATE: Updated record %u, name %s's salary from %u to %u\n", temp->hash, temp->name, previousSalary, temp->salary);
+        // already exists, ERROR
+        fprintf(stdout, "ERROR: Attempted to insert %u, name %s which ALREADY EXISTS\n", temp->hash, temp->name);
     }
-
-    rwlock_release_writelock(&rwlock);
-
-    log_event("WRITE LOCK RELEASED", priority);
 
     return;
 }
 
-void delete(const char *name, int priority){
-
-    rwlock_acquire_writelock(&rwlock);
-
-    log_event("WRITE LOCK ACQUIRED", priority);
+void delete(const char *name){
 
     hashRecord *previous;
     hashRecord *current = hash_table_head;
@@ -101,9 +89,8 @@ void delete(const char *name, int priority){
                 previous->next = current->next;
             }
 
-            printf("DELETE: Deleted record for %s\n", name);
 
-            rwlock_release_writelock(&rwlock);
+            fprintf(stdout, "DELETE: Deleted record for %s\n", name);
 
             free(current);
 
@@ -117,14 +104,29 @@ void delete(const char *name, int priority){
     // if current is null, the value doesn't exist
     printf("DELETE: Record for %s not found.\n", name);
 
-    rwlock_release_writelock(&rwlock);
+    return;
+}
 
-    log_event("WRITE LOCK RELEASED", priority);
+void updateSalary(const char *name, uint32_t new_salary){
+
+    hashRecord *temp = search(name);
+    
+    if(temp == NULL){
+        // doesnt exist, ERROR
+        fprintf(stdout, "ERROR: Attempted to update %u, name %s which DOESNT EXISTS\n", temp->hash, temp->name);
+    }
+    else{
+        // update
+        temp->salary = new_salary;
+
+        // used for debugging
+        fprintf(stdout, "UPDATE: Updated salary for %s, to %u\n", name, new_salary);
+    }
 
     return;
 }
 
-hashRecord *search(const char *name, int priority){
+hashRecord *search(const char *name){
 
     // log_event("Searching");
 
@@ -146,22 +148,15 @@ hashRecord *search(const char *name, int priority){
         current = current->next;
     }
 
-    // log_event("Done searching");
-
     return current; // should return a null pointer
 }
 
-void print(int priority){
-
-    rwlock_acquire_readlock(&rwlock);
-
-    log_event("READ LOCK ACQUIRED", priority);
+void print(){
 
     // we need to SORT by the hash. since these are numbers, simple comparisons will do
 
     if(hash_table_head == NULL){
         printf("Nothing to print, empty hash");
-        log_event("READ LOCK RELEASED", priority);
         return;
     }
 
@@ -199,10 +194,6 @@ void print(int priority){
         currentSorted = temp;
     }
 
-    rwlock_release_readlock(&rwlock);
-
-    log_event("READ LOCK RELEASED", priority);
-
     return; 
 }
 
@@ -218,9 +209,6 @@ sortedRecord *insertion_sort(sortedRecord *sorted_head, hashRecord *hashNode){
     }
     else{
         sortedRecord *current = sorted_head;
-
-        // 1 2 3 5
-        // 4
 
         // loop until we've found the next node
         while(current->next != NULL && hashNode->hash > current->next->data.hash){
