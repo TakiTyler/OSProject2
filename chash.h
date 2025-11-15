@@ -1,5 +1,3 @@
-#include "rwlock.h"
-#include "hashtable.h"
 #include <stdint.h>
 
 typedef struct command_data{

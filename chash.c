@@ -1,4 +1,6 @@
 #include "chash.h"
+#include "hashtable.h"
+#include "rwlock.h"
 #include "sys/time.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,12 +14,12 @@ rwlock_t rwlock;
 pthread_mutex_t log_mutex;
 
 // GIVEN BY PROF
-long long current_timestamp(){
-    struct timeval te;
-    gettimeofday(&te, NULL); // get current time
-    long long microseconds = (te.tv_sec * 1000000) + te.tv_usec; // calculate milliseconds
-    return microseconds;
-}
+long long current_timestamp() {  
+    struct timeval te;  
+    gettimeofday(&te, NULL); // get current time  
+    long long microseconds = (te.tv_sec * 1000000) + te.tv_usec; // calculate milliseconds  
+    return microseconds;  
+} 
 
 void parse_commands(){
     FILE *filePtr = fopen("commands.txt", "r");

@@ -1,21 +1,11 @@
-#include "chash.h"
+#include "hashtable.h"
 #include "sys/time.h"
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-extern rwlock_t rwlock;
-
 hashRecord *hash_table_head = NULL;
-
-// provided timestamp function
-long long current_timestamp(){
-    struct timeval te;
-    gettimeofday(&te, NULL); // get current time
-    long long microseconds = (te.tv_sec * 1000000) + te.tv_usec; // calculate milliseconds
-    return microseconds;
-}
 
 // provided hash function
 uint32_t jenkins_hash(const char *key){
