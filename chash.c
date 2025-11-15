@@ -26,7 +26,7 @@ void parse_commands(){
 
     // in case we don't open the file
     if(filePtr == NULL){
-        printf("ERROR: Unable to open commands.txt");
+        fprintf(stdout, "ERROR: Unable to open commands.txt");
         return;
     }
 
@@ -38,7 +38,7 @@ void parse_commands(){
     while(fgets(fileLine, MAX_LINE_SIZE, filePtr) != NULL){
         // at this point, we've gotten a line
         // we will assume that a line will always be under 100 lines
-        printf("Whole line = %s\n", fileLine);
+        fprintf(stdout, "\nWhole line = %s", fileLine);
 
         // allocate memory for the new node
         commandNode *newNode = (commandNode*)malloc(sizeof(commandNode));
@@ -53,7 +53,7 @@ void parse_commands(){
         strcpy(newNode->data.specific_command, token);
 
         if(strcmp(token, "insert") == 0){
-            printf("--Insert--\n");
+            fprintf(stdout, "--Insert--\n");
             // expects 3 more tokens: name, salary, priority
 
             // name
@@ -71,7 +71,7 @@ void parse_commands(){
         }
         else if(strcmp(token, "delete") == 0){
             // expects 2 more tokens: name, priority
-            printf("--Delete--\n");
+            fprintf(stdout, "--Delete--\n");
 
             // name
             token = strtok(NULL, ",");
@@ -86,7 +86,7 @@ void parse_commands(){
         }
         else if(strcmp(token, "search") == 0){
             // expects 2 more tokens: name, priority
-            printf("--Search--\n");
+            fprintf(stdout, "--Search--\n");
 
             // name
             token = strtok(NULL, ",");
@@ -101,7 +101,7 @@ void parse_commands(){
         }
         else if(strcmp(token, "print") == 0){
             // expects 1 more token: priority
-            printf("--Print--\n");
+            fprintf(stdout, "--Print--\n");
 
             // priority
             token = strtok(NULL, ",");
@@ -115,17 +115,17 @@ void parse_commands(){
         newNode->next = command_list_head;
         command_list_head = newNode;
 
-        printf("End of line\n");
+        fprintf(stdout, "End of line\n");
     }
 
     commandNode *temp = command_list_head;
     
     while(temp != NULL){
-        printf("--NEW NODE--\n");
-        printf("Command = %s\n", temp->data.specific_command);
-        printf("Name = %s\n", temp->data.name);
-        printf("Salary = %d\n", temp->data.salary);
-        printf("Priority = %d\n", temp->data.priority);
+        fprintf(stdout, "\n--NEW NODE--\n");
+        fprintf(stdout, "Command = %s\n", temp->data.specific_command);
+        fprintf(stdout, "Name = %s\n", temp->data.name);
+        fprintf(stdout, "Salary = %d\n", temp->data.salary);
+        fprintf(stdout, "Priority = %d\n", temp->data.priority);
         temp = temp->next;
     }
 
@@ -262,6 +262,9 @@ int main(){
 
     parse_commands();
 
+    // separating parse command outputs
+    fprintf(stdout, "\n\n\n");
+
     pthread_t thread_id[100];
     int thread_counter = 0;
 
@@ -276,6 +279,8 @@ int main(){
     for(int i = 0; i < thread_counter; i++){
         pthread_join(thread_id[i], NULL);
     }
+
+    print();
 
     return 0;
 }

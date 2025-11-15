@@ -45,11 +45,10 @@ void insert(const char *name, uint32_t salary){
 
         // used for debugging
         fprintf(stdout, "INSERT: Inserted %s, %u\n", name, salary);
-
     }
     else{
         // already exists, ERROR
-        fprintf(stdout, "ERROR: Attempted to insert %u, name %s which ALREADY EXISTS\n", temp->hash, temp->name);
+        fprintf(stdout, "INSERT: Duplicate entry %u, failed to insert.\n", temp->hash);
     }
 
     return;
@@ -90,7 +89,7 @@ void delete(const char *name){
     }
 
     // if current is null, the value doesn't exist
-    fprintf(stdout, "DELETE: Record for %s not found.\n", name);
+    fprintf(stdout, "DELETE: Missing entry, %u not deleted.\n", jenkins_hash(name));
 
     return;
 }
@@ -101,7 +100,7 @@ void updateSalary(const char *name, uint32_t new_salary){
     
     if(temp == NULL){
         // doesnt exist, ERROR
-        fprintf(stdout, "ERROR: Attempted to update name %s which DOESNT EXISTS\n", name);
+        fprintf(stdout, "UPDATE: Missing entry, update failed for %u\n\n", jenkins_hash(name));
     }
     else{
         // update
@@ -109,7 +108,7 @@ void updateSalary(const char *name, uint32_t new_salary){
         temp->salary = new_salary;
 
         // used for debugging
-        fprintf(stdout, "UPDATE: Updated salary for %s, from %u to %u\n", name, old_salary, new_salary);
+        fprintf(stdout, "UPDATE: Updated record for %u, from %u to %u\n", jenkins_hash(name), old_salary, new_salary);
     }
 
     return;
@@ -131,12 +130,16 @@ hashRecord *search(const char *name){
         currentKey = current->hash;
 
         if(givenKey == currentKey){
+
+            fprintf(stdout, "SEARCH: Found %s, %u\n", name, jenkins_hash(name));
+
             return current; // returns the pointer to the node
         }
 
         current = current->next;
     }
 
+    fprintf(stdout, "SEARCH: Unable to find %s\n", name);
     return current; // should return a null pointer
 }
 
@@ -144,8 +147,10 @@ void print(){
 
     // we need to SORT by the hash. since these are numbers, simple comparisons will do
 
+    fprintf(stdout, "Current Database:\n");
+
     if(hash_table_head == NULL){
-        printf("Nothing to print, empty hash");
+        fprintf(stdout, "EMPTY DATABASE\n");
         return;
     }
 
@@ -164,11 +169,13 @@ void print(){
     // loop through sorted
     sortedRecord *currentSorted = sorted_head;
 
+
+
     // print sorted
     while(currentSorted != NULL){
-        printf("%u", currentSorted->data.hash);
-        printf("%s", currentSorted->data.name);
-        printf("%u", currentSorted->data.salary);
+        fprintf(stdout, "%u ", currentSorted->data.hash);
+        fprintf(stdout, "%s ", currentSorted->data.name);
+        fprintf(stdout, "%u\n", currentSorted->data.salary);
 
         currentSorted = currentSorted->next;
     }
