@@ -1,4 +1,3 @@
-#include "hashtable.h"
 #include "chash.h"
 #include "sys/time.h"
 #include <stdint.h>
@@ -89,7 +88,6 @@ void delete(const char *name){
                 previous->next = current->next;
             }
 
-
             fprintf(stdout, "DELETE: Deleted record for %s\n", name);
 
             free(current);
@@ -102,7 +100,7 @@ void delete(const char *name){
     }
 
     // if current is null, the value doesn't exist
-    printf("DELETE: Record for %s not found.\n", name);
+    fprintf(stdout, "DELETE: Record for %s not found.\n", name);
 
     return;
 }
@@ -113,14 +111,15 @@ void updateSalary(const char *name, uint32_t new_salary){
     
     if(temp == NULL){
         // doesnt exist, ERROR
-        fprintf(stdout, "ERROR: Attempted to update %u, name %s which DOESNT EXISTS\n", temp->hash, temp->name);
+        fprintf(stdout, "ERROR: Attempted to update name %s which DOESNT EXISTS\n", name);
     }
     else{
         // update
+        uint32_t old_salary = temp->salary;
         temp->salary = new_salary;
 
         // used for debugging
-        fprintf(stdout, "UPDATE: Updated salary for %s, to %u\n", name, new_salary);
+        fprintf(stdout, "UPDATE: Updated salary for %s, from %u to %u\n", name, old_salary, new_salary);
     }
 
     return;
