@@ -16,8 +16,10 @@ typedef struct command_node{
 
 extern commandNode *command_list_head;
 
+long long current_timestamp();
+
 void parse_commands();
 
 void *execute_command(void *command);
 
-void log_event(const char *message);
+void log_event(const char *message, int priority);

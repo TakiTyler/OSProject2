@@ -20,19 +20,16 @@ typedef struct sorted_hashes{
 uint32_t jenkins_hash(const char *key);
 
 // structure for insert function
-void insert(const char *name, uint32_t salary);
+void insert(const char *name, uint32_t salary, int priority);
 
 // structure for delete function
-void delete(const char *name);
-
-// update salary w/o updating key & name
-void updateSalary(const char *name, uint32_t salary);
+void delete(const char *name, int priority);
 
 // structure for search function
-hashRecord *search(const char *name);
+hashRecord *search(const char *name, int priority);
 
 // structure for print function
-void print();
+void print(int priority);
 
 // for printing
 sortedRecord *insertion_sort(sortedRecord *sorted_head, hashRecord *newNode);

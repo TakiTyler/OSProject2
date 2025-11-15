@@ -36,13 +36,13 @@ uint32_t jenkins_hash(const char *key){
     return hash;
 }
 
-void insert(const char *name, uint32_t salary){
+void insert(const char *name, uint32_t salary, int priority){
 
     rwlock_acquire_writelock(&rwlock);
 
-    log_event("Acquired write lock for insert");
+    log_event("WRITE LOCK ACQUIRED", priority);
 
-    hashRecord *temp = search(name);
+    hashRecord *temp = search(name, priority);
     
     if(temp == NULL){
         // insert at the head
@@ -69,16 +69,16 @@ void insert(const char *name, uint32_t salary){
 
     rwlock_release_writelock(&rwlock);
 
-    log_event("Released lock for insert");
+    log_event("WRITE LOCK RELEASED", priority);
 
     return;
 }
 
-void delete(const char *name){
+void delete(const char *name, int priority){
 
     rwlock_acquire_writelock(&rwlock);
 
-    log_event("Acquired write lock for delete");
+    log_event("WRITE LOCK ACQUIRED", priority);
 
     hashRecord *previous;
     hashRecord *current = hash_table_head;
@@ -119,14 +119,14 @@ void delete(const char *name){
 
     rwlock_release_writelock(&rwlock);
 
-    log_event("Released write lock for delete");
+    log_event("WRITE LOCK RELEASED", priority);
 
     return;
 }
 
-hashRecord *search(const char *name){
+hashRecord *search(const char *name, int priority){
 
-    log_event("Searching");
+    // log_event("Searching");
 
     hashRecord *current = hash_table_head;
 
@@ -146,22 +146,22 @@ hashRecord *search(const char *name){
         current = current->next;
     }
 
-    log_event("Done searching");
+    // log_event("Done searching");
 
     return current; // should return a null pointer
 }
 
-void print(){
+void print(int priority){
 
     rwlock_acquire_readlock(&rwlock);
 
-    log_event("Acquired read lock for print");
+    log_event("READ LOCK ACQUIRED", priority);
 
     // we need to SORT by the hash. since these are numbers, simple comparisons will do
 
     if(hash_table_head == NULL){
         printf("Nothing to print, empty hash");
-        log_event("Released lock for print");
+        log_event("READ LOCK RELEASED", priority);
         return;
     }
 
@@ -201,7 +201,7 @@ void print(){
 
     rwlock_release_readlock(&rwlock);
 
-    log_event("Released read lock for print");
+    log_event("READ LOCK RELEASED", priority);
 
     return; 
 }
