@@ -144,14 +144,13 @@ void *execute_command(void *command_arg){
         // create the output string corresponding to insert
         snprintf(log_string, MAX_LINE_SIZE+1, "INSERT,%u,%s,%u", jenkins_hash(passed_command->name), passed_command->name, passed_command->salary);
         
-        // log command
-        log_event(log_string, passed_command->priority);
-
         // run the command
         log_event("WAITING FOR MY TURN", passed_command->priority);
         rwlock_acquire_writelock(&rwlock);
         log_event("AWAKENED FOR WORK", passed_command->priority);
         log_event("WRITE LOCK ACQUIRED", passed_command->priority);
+        // log command
+        log_event(log_string, passed_command->priority);
         insert(passed_command->name, passed_command->salary);
         rwlock_release_writelock(&rwlock);
         log_event("WRITE LOCK RELEASED", passed_command->priority);
@@ -161,14 +160,13 @@ void *execute_command(void *command_arg){
         // create the output string corresponding to delete
         snprintf(log_string, MAX_LINE_SIZE+1, "DELETE,%u,%s", jenkins_hash(passed_command->name), passed_command->name);
 
-        // log command
-        log_event(log_string, passed_command->priority);
-
         // run the command
         log_event("WAITING FOR MY TURN", passed_command->priority);
         rwlock_acquire_writelock(&rwlock);
         log_event("AWAKENED FOR WORK", passed_command->priority);
         log_event("WRITE LOCK ACQUIRED", passed_command->priority);
+        // log command
+        log_event(log_string, passed_command->priority);
         delete(passed_command->name);
         rwlock_release_writelock(&rwlock);
         log_event("WRITE LOCK RELEASED", passed_command->priority);
@@ -178,14 +176,13 @@ void *execute_command(void *command_arg){
         // create the output string corresponding to delete
         snprintf(log_string, MAX_LINE_SIZE+1, "UPDATE,%u,%s,%u", jenkins_hash(passed_command->name), passed_command->name, passed_command->salary);
 
-        // log command
-        log_event(log_string, passed_command->priority);
-
         // run the command
         log_event("WAITING FOR MY TURN", passed_command->priority);
         rwlock_acquire_writelock(&rwlock);
         log_event("AWAKENED FOR WORK", passed_command->priority);
         log_event("WRITE LOCK ACQUIRED", passed_command->priority);
+        // log command
+        log_event(log_string, passed_command->priority);
         updateSalary(passed_command->name, passed_command->salary);
         rwlock_release_writelock(&rwlock);
         log_event("WRITE LOCK RELEASED", passed_command->priority);
@@ -195,14 +192,13 @@ void *execute_command(void *command_arg){
         // create the output string corresponding to search
         snprintf(log_string, MAX_LINE_SIZE+1, "SEARCH,%u,%s", jenkins_hash(passed_command->name), passed_command->name);
 
-        // log command
-        log_event(log_string, passed_command->priority);
-
         // run the command
         log_event("WAITING FOR MY TURN", passed_command->priority);
         rwlock_acquire_readlock(&rwlock);
         log_event("AWAKENED FOR WORK", passed_command->priority);
         log_event("READ LOCK ACQUIRED", passed_command->priority);
+        // log command
+        log_event(log_string, passed_command->priority);
         search(passed_command->name);
         rwlock_release_readlock(&rwlock);
         log_event("READ LOCK RELEASED", passed_command->priority);
@@ -212,14 +208,13 @@ void *execute_command(void *command_arg){
         // create the output string corresponding to print
         snprintf(log_string, MAX_LINE_SIZE+1, "PRINT");
 
-        // log command
-        log_event(log_string, passed_command->priority);
-
         // run the command
         log_event("WAITING FOR MY TURN", passed_command->priority);
         rwlock_acquire_readlock(&rwlock);
         log_event("AWAKENED FOR WORK", passed_command->priority);
         log_event("READ LOCK ACQUIRED", passed_command->priority);
+        // log command
+        log_event(log_string, passed_command->priority);
         print(passed_command->priority);
         rwlock_release_readlock(&rwlock);
         log_event("READ LOCK RELEASED", passed_command->priority);

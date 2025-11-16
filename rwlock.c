@@ -22,8 +22,6 @@ void rwlock_acquire_readlock(rwlock_t *lock){
     lock->active_readers++;
 
     pthread_mutex_unlock(&lock->lock);
-
-    // log that the lock was acquired
 }
 void rwlock_release_readlock(rwlock_t *lock){
     pthread_mutex_lock(&lock->lock);
@@ -36,8 +34,6 @@ void rwlock_release_readlock(rwlock_t *lock){
     }
 
     pthread_mutex_unlock(&lock->lock);
-
-    // log that the lock was released
 }
 void rwlock_acquire_writelock(rwlock_t *lock){
     pthread_mutex_lock(&lock->lock);
@@ -55,8 +51,6 @@ void rwlock_acquire_writelock(rwlock_t *lock){
     lock->active_writers = 1;
 
     pthread_mutex_unlock(&lock->lock);
-
-    // log that write lock was acquired
 }
 void rwlock_release_writelock(rwlock_t *lock){
     pthread_mutex_lock(&lock->lock);
@@ -72,6 +66,4 @@ void rwlock_release_writelock(rwlock_t *lock){
     }
 
     pthread_mutex_unlock(&lock->lock);
-
-    // log that write lock was released
 }
