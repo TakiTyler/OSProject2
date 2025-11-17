@@ -148,11 +148,25 @@ void parse_commands(){
             newNode->data.salary = 0;
         }
 
+        // SO FAR, WE HAVE CREATED A NEW NODE...
+        // BUT WE HAVE AN ISSUE... WILL WE BE GIVEN A SORTED LIST???
+
         newNode->next = command_list_head;
         command_list_head = newNode;
 
+        fprintf(stdout, "%d\n", token);
         fprintf(stdout, "End of line\n");
     }
+
+    // ADD ANOTHER PRINT TO THE END OF THE LIST
+    // since list is in reverse order, assume head has the greatest value in priority
+    commandNode *finalPrintCommand = (commandNode*)malloc(sizeof(commandNode));
+    finalPrintCommand->data.priority = command_list_head->data.priority+1;
+    strcpy(finalPrintCommand->data.specific_command, "print");
+    finalPrintCommand->data.name[0] = '\0';
+    finalPrintCommand->data.salary = 0;
+    finalPrintCommand->next = command_list_head;
+    command_list_head = finalPrintCommand;
 
     // right now, the commands are NOT stored in order
     // it's inefficient, but lets reverse the linked list AFTER creating it
@@ -162,6 +176,7 @@ void parse_commands(){
     commandNode *temp = command_list_head;
     
     while(temp != NULL){
+        // these prints were used for testing
         fprintf(stdout, "\n--NEW NODE--\n");
         fprintf(stdout, "Command = %s\n", temp->data.specific_command);
         fprintf(stdout, "Name = %s\n", temp->data.name);
@@ -184,13 +199,13 @@ void *execute_command(void *command_arg){
 
     command_hash = jenkins_hash(passed_command->name);
 
+    // wait until the command's proper turn
+    wait_turn(passed_command->priority);
+
     if(strcmp(passed_command->specific_command, "insert") == 0){
-        
+
         // create the output string corresponding to insert (not actually printing yet)
         snprintf(log_string, MAX_LINE_SIZE+1, "INSERT,%u,%s,%u", command_hash, passed_command->name, passed_command->salary);
-
-        // wait until the command's proper turn
-        wait_turn(passed_command->priority);
 
         // run the command
         rwlock_acquire_writelock(&rwlock);
@@ -206,9 +221,6 @@ void *execute_command(void *command_arg){
         // create the output string corresponding to delete (not actually printing yet)
         snprintf(log_string, MAX_LINE_SIZE+1, "DELETE,%u,%s", command_hash, passed_command->name);
 
-        // wait until the command's proper turn
-        wait_turn(passed_command->priority);
-
         // run the command
         rwlock_acquire_writelock(&rwlock);
         log_event("AWAKENED FOR WORK", passed_command->priority);
@@ -222,9 +234,6 @@ void *execute_command(void *command_arg){
 
         // create the output string corresponding to update (not actually printing yet)
         snprintf(log_string, MAX_LINE_SIZE+1, "UPDATE,%u,%s,%u", command_hash, passed_command->name, passed_command->salary);
-        
-        // wait until the command's proper turn
-        wait_turn(passed_command->priority);
 
         // run the command
         rwlock_acquire_writelock(&rwlock);
@@ -236,12 +245,9 @@ void *execute_command(void *command_arg){
         log_event("WRITE LOCK RELEASED", passed_command->priority);
     }
     else if(strcmp(passed_command->specific_command, "search") == 0){
-        
+
         // create the output string corresponding to search (not actually printing yet)
         snprintf(log_string, MAX_LINE_SIZE+1, "SEARCH,%u,%s", command_hash, passed_command->name);
-
-        // wait until the command's proper turn
-        wait_turn(passed_command->priority);
 
         // run the command
         rwlock_acquire_readlock(&rwlock);
@@ -253,13 +259,10 @@ void *execute_command(void *command_arg){
         log_event("READ LOCK RELEASED", passed_command->priority);
     }
     else if(strcmp(passed_command->specific_command, "print") == 0){
-        
+
         // create the output string corresponding to print (not actually printing yet)
         snprintf(log_string, MAX_LINE_SIZE+1, "PRINT");
-        
-        // wait until the command's proper turn
-        wait_turn(passed_command->priority);
-        
+
         // run the command
         rwlock_acquire_readlock(&rwlock);
         log_event("AWAKENED FOR WORK", passed_command->priority);
@@ -326,8 +329,6 @@ int main(){
     for(int i = 0; i < thread_counter; i++){
         pthread_join(thread_id[i], NULL);
     }
-
-    print();
 
     return 0;
 }
