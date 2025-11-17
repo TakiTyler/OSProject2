@@ -27,15 +27,15 @@ uint32_t jenkins_hash(const char *key){
     return hash;
 }
 
-void insert(const char *name, uint32_t salary){
+void insert(const char *name, uint32_t hash, uint32_t salary){
 
-    hashRecord *temp = search(name);
+    hashRecord *temp = search(name, hash);
     
     if(temp == NULL){
         // insert at the head
         hashRecord *newRecord = (hashRecord *)malloc(sizeof(hashRecord));
 
-        newRecord->hash = jenkins_hash(name);
+        newRecord->hash = hash;
         strncpy(newRecord->name, name, 49);
         newRecord->name[49] = '\0'; // guarantee we end with a null termination
         newRecord->salary = salary;
@@ -54,19 +54,17 @@ void insert(const char *name, uint32_t salary){
     return;
 }
 
-void delete(const char *name){
+void delete(const char *name, uint32_t hash){
 
     hashRecord *previous;
     hashRecord *current = hash_table_head;
-
-    uint32_t givenKey = jenkins_hash(name);
     uint32_t currentKey;
 
     while(current != NULL){
 
         currentKey = current->hash;
 
-        if(givenKey == currentKey){
+        if(hash == currentKey){
             // value exists
 
             // if current is the head
@@ -89,18 +87,18 @@ void delete(const char *name){
     }
 
     // if current is null, the value doesn't exist
-    fprintf(stdout, "DELETE: Missing entry, %u not deleted.\n", jenkins_hash(name));
+    fprintf(stdout, "DELETE: Missing entry, %u not deleted.\n", hash);
 
     return;
 }
 
-void updateSalary(const char *name, uint32_t new_salary){
+void updateSalary(const char *name, uint32_t hash, uint32_t new_salary){
 
-    hashRecord *temp = search(name);
+    hashRecord *temp = search(name, hash);
     
     if(temp == NULL){
         // doesnt exist, ERROR
-        fprintf(stdout, "UPDATE: Missing entry, update failed for %u\n\n", jenkins_hash(name));
+        fprintf(stdout, "UPDATE: Missing entry, update failed for %u\n\n", hash);
     }
     else{
         // update
@@ -108,19 +106,17 @@ void updateSalary(const char *name, uint32_t new_salary){
         temp->salary = new_salary;
 
         // used for debugging
-        fprintf(stdout, "UPDATE: Updated record for %u, from %u to %u\n", jenkins_hash(name), old_salary, new_salary);
+        fprintf(stdout, "UPDATE: Updated record for %u, from %u to %u\n", hash, old_salary, new_salary);
     }
 
     return;
 }
 
-hashRecord *search(const char *name){
+hashRecord *search(const char *name, uint32_t hash){
 
     // log_event("Searching");
 
     hashRecord *current = hash_table_head;
-
-    uint32_t givenKey = jenkins_hash(name);
     uint32_t currentKey;
 
     while(current != NULL){
@@ -129,9 +125,9 @@ hashRecord *search(const char *name){
         // if equal, return the hashRecord
         currentKey = current->hash;
 
-        if(givenKey == currentKey){
+        if(hash == currentKey){
 
-            fprintf(stdout, "SEARCH: Found %s, %u\n", name, jenkins_hash(name));
+            fprintf(stdout, "SEARCH: Found %s, %u\n", name, hash);
 
             return current; // returns the pointer to the node
         }
@@ -168,8 +164,6 @@ void print(){
 
     // loop through sorted
     sortedRecord *currentSorted = sorted_head;
-
-
 
     // print sorted
     while(currentSorted != NULL){

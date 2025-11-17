@@ -13,13 +13,48 @@ commandNode *command_list_head = NULL;
 rwlock_t rwlock;
 pthread_mutex_t log_mutex;
 
+int current_turn = 1;
+pthread_mutex_t mutex_turn;
+pthread_cond_t cond_turn;
+
 // GIVEN BY PROF
 long long current_timestamp() {  
     struct timeval te;  
     gettimeofday(&te, NULL); // get current time  
     long long microseconds = (te.tv_sec * 1000000) + te.tv_usec; // calculate milliseconds  
     return microseconds;  
-} 
+}
+
+void wait_turn(int priority){
+    // wait until the command's proper turn
+    pthread_mutex_lock(&mutex_turn);
+    while(priority != current_turn){
+        pthread_cond_wait(&cond_turn, &mutex_turn);
+    }
+    // update global counter
+    current_turn++;
+    pthread_cond_broadcast(&cond_turn);
+    pthread_mutex_unlock(&mutex_turn);
+}
+
+void reverse_list(){
+    commandNode *current = command_list_head;
+    commandNode *previous;
+    commandNode *next;
+
+    while(current != NULL){
+        next = current->next;
+
+        // reverse the linking
+        current->next = previous;
+        previous = current;
+        current = next;
+    }
+
+    // at this point, previous is the new head
+    command_list_head = previous;
+       
+}
 
 void parse_commands(){
     FILE *filePtr = fopen("commands.txt", "r");
@@ -118,6 +153,11 @@ void parse_commands(){
         fprintf(stdout, "End of line\n");
     }
 
+    // right now, the commands are NOT stored in order
+    // it's inefficient, but lets reverse the linked list AFTER creating it
+        // yes, not great BUT it works
+    reverse_list();
+
     commandNode *temp = command_list_head;
     
     while(temp != NULL){
@@ -137,84 +177,93 @@ void parse_commands(){
 void *execute_command(void *command_arg){
     command *passed_command = (command *)command_arg;
     char *log_string = malloc(MAX_LINE_SIZE+1); // assume 100 charater limit
+    uint32_t command_hash;
 
+    log_event("WAITING FOR MY TURN", passed_command->priority);
+
+    command_hash = jenkins_hash(passed_command->name);
 
     if(strcmp(passed_command->specific_command, "insert") == 0){
         
-        // create the output string corresponding to insert
-        snprintf(log_string, MAX_LINE_SIZE+1, "INSERT,%u,%s,%u", jenkins_hash(passed_command->name), passed_command->name, passed_command->salary);
-        
+        // create the output string corresponding to insert (not actually printing yet)
+        snprintf(log_string, MAX_LINE_SIZE+1, "INSERT,%u,%s,%u", command_hash, passed_command->name, passed_command->salary);
+
+        // wait until the command's proper turn
+        wait_turn(passed_command->priority);
+
         // run the command
-        log_event("WAITING FOR MY TURN", passed_command->priority);
         rwlock_acquire_writelock(&rwlock);
         log_event("AWAKENED FOR WORK", passed_command->priority);
         log_event("WRITE LOCK ACQUIRED", passed_command->priority);
-        // log command
-        log_event(log_string, passed_command->priority);
-        insert(passed_command->name, passed_command->salary);
+        log_event(log_string, passed_command->priority); // log command
+        insert(passed_command->name, command_hash, passed_command->salary);
         rwlock_release_writelock(&rwlock);
         log_event("WRITE LOCK RELEASED", passed_command->priority);
     }
     else if(strcmp(passed_command->specific_command, "delete") == 0){
 
-        // create the output string corresponding to delete
-        snprintf(log_string, MAX_LINE_SIZE+1, "DELETE,%u,%s", jenkins_hash(passed_command->name), passed_command->name);
+        // create the output string corresponding to delete (not actually printing yet)
+        snprintf(log_string, MAX_LINE_SIZE+1, "DELETE,%u,%s", command_hash, passed_command->name);
+
+        // wait until the command's proper turn
+        wait_turn(passed_command->priority);
 
         // run the command
-        log_event("WAITING FOR MY TURN", passed_command->priority);
         rwlock_acquire_writelock(&rwlock);
         log_event("AWAKENED FOR WORK", passed_command->priority);
         log_event("WRITE LOCK ACQUIRED", passed_command->priority);
-        // log command
-        log_event(log_string, passed_command->priority);
-        delete(passed_command->name);
+        log_event(log_string, passed_command->priority); // log command
+        delete(passed_command->name, command_hash);
         rwlock_release_writelock(&rwlock);
         log_event("WRITE LOCK RELEASED", passed_command->priority);
     }
     else if(strcmp(passed_command->specific_command, "update") == 0){
 
-        // create the output string corresponding to delete
-        snprintf(log_string, MAX_LINE_SIZE+1, "UPDATE,%u,%s,%u", jenkins_hash(passed_command->name), passed_command->name, passed_command->salary);
+        // create the output string corresponding to update (not actually printing yet)
+        snprintf(log_string, MAX_LINE_SIZE+1, "UPDATE,%u,%s,%u", command_hash, passed_command->name, passed_command->salary);
+        
+        // wait until the command's proper turn
+        wait_turn(passed_command->priority);
 
         // run the command
-        log_event("WAITING FOR MY TURN", passed_command->priority);
         rwlock_acquire_writelock(&rwlock);
         log_event("AWAKENED FOR WORK", passed_command->priority);
         log_event("WRITE LOCK ACQUIRED", passed_command->priority);
-        // log command
-        log_event(log_string, passed_command->priority);
-        updateSalary(passed_command->name, passed_command->salary);
+        log_event(log_string, passed_command->priority); // log command
+        updateSalary(passed_command->name, command_hash, passed_command->salary);
         rwlock_release_writelock(&rwlock);
         log_event("WRITE LOCK RELEASED", passed_command->priority);
     }
     else if(strcmp(passed_command->specific_command, "search") == 0){
         
-        // create the output string corresponding to search
-        snprintf(log_string, MAX_LINE_SIZE+1, "SEARCH,%u,%s", jenkins_hash(passed_command->name), passed_command->name);
+        // create the output string corresponding to search (not actually printing yet)
+        snprintf(log_string, MAX_LINE_SIZE+1, "SEARCH,%u,%s", command_hash, passed_command->name);
+
+        // wait until the command's proper turn
+        wait_turn(passed_command->priority);
 
         // run the command
-        log_event("WAITING FOR MY TURN", passed_command->priority);
         rwlock_acquire_readlock(&rwlock);
         log_event("AWAKENED FOR WORK", passed_command->priority);
         log_event("READ LOCK ACQUIRED", passed_command->priority);
-        // log command
-        log_event(log_string, passed_command->priority);
-        search(passed_command->name);
+        log_event(log_string, passed_command->priority); // log command
+        search(passed_command->name, command_hash);
         rwlock_release_readlock(&rwlock);
         log_event("READ LOCK RELEASED", passed_command->priority);
     }
     else if(strcmp(passed_command->specific_command, "print") == 0){
         
-        // create the output string corresponding to print
+        // create the output string corresponding to print (not actually printing yet)
         snprintf(log_string, MAX_LINE_SIZE+1, "PRINT");
-
+        
+        // wait until the command's proper turn
+        wait_turn(passed_command->priority);
+        
         // run the command
-        log_event("WAITING FOR MY TURN", passed_command->priority);
         rwlock_acquire_readlock(&rwlock);
         log_event("AWAKENED FOR WORK", passed_command->priority);
         log_event("READ LOCK ACQUIRED", passed_command->priority);
-        // log command
-        log_event(log_string, passed_command->priority);
+        log_event(log_string, passed_command->priority); // log command
         print(passed_command->priority);
         rwlock_release_readlock(&rwlock);
         log_event("READ LOCK RELEASED", passed_command->priority);
@@ -254,6 +303,8 @@ int main(){
     rwlock_init(&rwlock);
 
     pthread_mutex_init(&log_mutex, NULL);
+    pthread_mutex_init(&mutex_turn, NULL);
+    pthread_cond_init(&cond_turn, NULL);
 
     parse_commands();
 
