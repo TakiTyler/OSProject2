@@ -158,16 +158,6 @@ void parse_commands(){
         fprintf(stdout, "End of line\n");
     }
 
-    // ADD ANOTHER PRINT TO THE END OF THE LIST
-    // since list is in reverse order, assume head has the greatest value in priority
-    commandNode *finalPrintCommand = (commandNode*)malloc(sizeof(commandNode));
-    finalPrintCommand->data.priority = command_list_head->data.priority+1;
-    strcpy(finalPrintCommand->data.specific_command, "print");
-    finalPrintCommand->data.name[0] = '\0';
-    finalPrintCommand->data.salary = 0;
-    finalPrintCommand->next = command_list_head;
-    command_list_head = finalPrintCommand;
-
     // right now, the commands are NOT stored in order
     // it's inefficient, but lets reverse the linked list AFTER creating it
         // yes, not great BUT it works
@@ -328,6 +318,15 @@ int main(){
 
     for(int i = 0; i < thread_counter; i++){
         pthread_join(thread_id[i], NULL);
+    }
+
+    print();
+
+    // free all memory from the command list
+    while(command_list_head != NULL){
+        temp = command_list_head->next;
+        free(command_list_head);
+        command_list_head = temp;
     }
 
     return 0;
