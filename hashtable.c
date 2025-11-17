@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+
+#define TRUE 1
 
 hashRecord *hash_table_head = NULL;
 
@@ -29,7 +32,7 @@ uint32_t jenkins_hash(const char *key){
 
 void insert(const char *name, uint32_t hash, uint32_t salary){
 
-    hashRecord *temp = search(name, hash);
+    hashRecord *temp = search(name, hash, false);
     
     if(temp == NULL){
         // insert at the head
@@ -94,7 +97,7 @@ void delete(const char *name, uint32_t hash){
 
 void updateSalary(const char *name, uint32_t hash, uint32_t new_salary){
 
-    hashRecord *temp = search(name, hash);
+    hashRecord *temp = search(name, hash, false);
     
     if(temp == NULL){
         // doesnt exist, ERROR
@@ -112,7 +115,7 @@ void updateSalary(const char *name, uint32_t hash, uint32_t new_salary){
     return;
 }
 
-hashRecord *search(const char *name, uint32_t hash){
+hashRecord *search(const char *name, uint32_t hash, bool log){
 
     // log_event("Searching");
 
@@ -127,7 +130,9 @@ hashRecord *search(const char *name, uint32_t hash){
 
         if(hash == currentKey){
 
-            fprintf(stdout, "SEARCH: Found %s, %u\n", name, hash);
+            if(log){
+                fprintf(stdout, "SEARCH: Found %s, %u\n", name, hash);
+            }
 
             return current; // returns the pointer to the node
         }
@@ -135,7 +140,9 @@ hashRecord *search(const char *name, uint32_t hash){
         current = current->next;
     }
 
-    fprintf(stdout, "SEARCH: Unable to find %s\n", name);
+    if(log){
+        fprintf(stdout, "SEARCH: Unable to find %s\n", name);
+    }
     return current; // should return a null pointer
 }
 

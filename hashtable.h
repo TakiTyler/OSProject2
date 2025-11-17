@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 
 // structure for a linked list
 typedef struct hash_struct{
@@ -29,7 +30,7 @@ void delete(const char *name, uint32_t hash);
 void updateSalary(const char *name, uint32_t hash, uint32_t new_salary);
 
 // structure for search function
-hashRecord *search(const char *name, uint32_t hash);
+hashRecord *search(const char *name, uint32_t hash, bool log);
 
 // structure for print function
 void print();

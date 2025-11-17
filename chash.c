@@ -4,6 +4,7 @@
 #include "sys/time.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <pthread.h>
 
@@ -247,7 +248,7 @@ void *execute_command(void *command_arg){
         log_event("AWAKENED FOR WORK", passed_command->priority);
         log_event("READ LOCK ACQUIRED", passed_command->priority);
         log_event(log_string, passed_command->priority); // log command
-        search(passed_command->name, command_hash);
+        search(passed_command->name, command_hash, true);
         rwlock_release_readlock(&rwlock);
         log_event("READ LOCK RELEASED", passed_command->priority);
     }
